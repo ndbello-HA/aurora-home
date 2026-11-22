@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1920, height=1080">
+<title>Aurora Home</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="stage">
+  <svg id="bg" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <defs>
+      <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#0b0a2e"/>
+        <stop offset="0.35" stop-color="#3b1d6e"/>
+        <stop offset="0.6" stop-color="#b8466e"/>
+        <stop offset="0.74" stop-color="#ff8a3d"/>
+        <stop offset="0.8" stop-color="#ffc06a"/>
+      </linearGradient>
+      <linearGradient id="lake" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#ff9b52" stop-opacity="0.85"/>
+        <stop offset="0.25" stop-color="#7a2f6b"/>
+        <stop offset="1" stop-color="#0a0820"/>
+      </linearGradient>
+      <radialGradient id="sun" cx="0.5" cy="0.5" r="0.5">
+        <stop offset="0" stop-color="#fff3c4"/>
+        <stop offset="0.25" stop-color="#ffc86b" stop-opacity="0.9"/>
+        <stop offset="1" stop-color="#ff7a2f" stop-opacity="0"/>
+      </radialGradient>
+      <radialGradient id="planet" cx="0.35" cy="0.35" r="0.75">
+        <stop offset="0" stop-color="#c9b8ff"/>
+        <stop offset="0.45" stop-color="#7b5ed6"/>
+        <stop offset="1" stop-color="#1c1150"/>
+      </radialGradient>
+      <radialGradient id="moon" cx="0.35" cy="0.35" r="0.7">
+        <stop offset="0" stop-color="#f3ecff"/>
+        <stop offset="1" stop-color="#6b5aa8"/>
+      </radialGradient>
+      <linearGradient id="m1" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#5a2b6e"/><stop offset="1" stop-color="#2a1240"/>
+      </linearGradient>
+      <linearGradient id="m2" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#2b1238"/><stop offset="1" stop-color="#120718"/>
+      </linearGradient>
+      <filter id="blur8"><feGaussianBlur stdDeviation="8"/></filter>
+      <filter id="blur2"><feGaussianBlur stdDeviation="2"/></filter>
+    </defs>
+    <rect width="1920" height="1080" fill="url(#sky)"/>
+    <g id="stars" fill="#fff"></g>
+    <g opacity="0.95">
+      <circle cx="1310" cy="230" r="300" fill="url(#planet)"/>
+      <ellipse cx="1310" cy="240" rx="520" ry="70" fill="none" stroke="#e9dcff" stroke-opacity="0.45" stroke-width="10" transform="rotate(-12 1310 240)"/>
+      <ellipse cx="1310" cy="240" rx="560" ry="82" fill="none" stroke="#e9dcff" stroke-opacity="0.18" stroke-width="22" transform="rotate(-12 1310 240)"/>
+      <path d="M 1010 230 A 300 300 0 0 0 1610 230" fill="url(#planet)" opacity="0.001"/>
+    </g>
+    <circle cx="930" cy="110" r="40" fill="url(#moon)"/>
+    <circle cx="1100" cy="700" r="320" fill="url(#sun)" filter="url(#blur8)"/>
+    <polygon fill="url(#m1)" opacity="0.9" points="0,760 120,640 230,700 360,560 480,680 600,600 720,690 860,540 980,650 1080,560 1200,670 1330,590 1450,680 1580,600 1700,690 1820,620 1920,680 1920,800 0,800"/>
+    <polygon fill="url(#m2)" points="0,800 90,700 200,760 300,650 420,770 540,690 640,780 760,720 880,800 1000,740 1120,610 1180,560 1240,610 1330,700 1460,760 1560,700 1700,790 1820,730 1920,780 1920,820 0,820"/>
+    <rect y="800" width="1920" height="280" fill="url(#lake)"/>
+    <g opacity="0.35" transform="translate(0,1620) scale(1,-1)" filter="url(#blur2)">
+      <polygon fill="#2a1240" points="0,800 90,700 200,760 300,650 420,770 540,690 640,780 760,720 880,800 1000,740 1120,610 1180,560 1240,610 1330,700 1460,760 1560,700 1700,790 1820,730 1920,780 1920,820 0,820"/>
+    </g>
+    <rect x="700" y="812" width="800" height="4" fill="#ffd38a" opacity="0.55" filter="url(#blur2)"/>
+    <rect x="820" y="840" width="560" height="3" fill="#ffd38a" opacity="0.35" filter="url(#blur2)"/>
+    <rect x="900" y="866" width="400" height="2" fill="#ffd38a" opacity="0.25"/>
+    <rect width="1920" height="1080" fill="#05030f" opacity="0.18"/>
+  </svg>
+
+  <div id="clock">
+    <div id="time">--:--</div>
+    <div id="date"></div>
+  </div>
+
+  <div id="status">
+    <span id="net" class="pill">● Online</span>
+  </div>
+
+  <nav id="side" class="glass">
+    <button class="nav f active" data-page="home"><span class="ic">⌂</span>Início</button>
+    <button class="nav f" data-page="apps"><span class="ic">▦</span>Apps</button>
+    <button class="nav f" data-launch="Claro TV+"><span class="ic">▣</span>TV ao Vivo</button>
+    <button class="nav f" data-launch-match="gaming hub"><span class="ic">◈</span>Jogos</button>
+    <button class="nav f" data-launch="Spotify"><span class="ic">♪</span>Música</button>
+    <button class="nav f" data-page="casa"><span class="ic">✦</span>Casa</button>
+    <button class="nav f" data-page="settings"><span class="ic">⚙</span>Ajustes</button>
+  </nav>
+
+  <main id="home" class="page show">
+    <section id="hero" class="glass">
+      <div id="hero-inner">
+        <div class="kicker" id="hero-kicker"></div>
+        <h1 id="hero-title"></h1>
+        <p id="hero-sub"></p>
+        <button id="hero-btn" class="cta f">▶ <span id="hero-cta">Assistir agora</span></button>
+      </div>
+      <div id="dots"></div>
+    </section>
+
+    <aside id="cards">
+      <div id="weather" class="glass card">
+        <div class="w-icon" id="w-icon">☾</div>
+        <div>
+          <div class="w-city" id="w-city"></div>
+          <div class="w-temp" id="w-temp">--°</div>
+          <div class="w-desc" id="w-desc">Carregando…</div>
+        </div>
+      </div>
+      <button id="inputs" class="glass card f">
+        <div class="in-k">⇄ Entradas</div>
+        <div class="in-v">HDMI / Fontes <span class="chev">›</span></div>
+      </button>
+    </aside>
+
+    <h2 class="row-title" style="top:640px">Seus aplicativos</h2>
+    <div id="apps-row" class="row"></div>
+
+    <h2 class="row-title" id="casa-title" style="top:868px">Casa<span class="demo-tag" id="casa-demo"></span></h2>
+    <div id="casa-row" class="row"></div>
+  </main>
+
+  <main id="apps" class="page">
+    <h2 class="page-title">Todos os aplicativos</h2>
+    <div id="all-apps"></div>
+  </main>
+
+  <main id="casa" class="page">
+    <h2 class="page-title">Casa</h2>
+    <div id="casa-grid"></div>
+  </main>
+
+  <main id="settings" class="page">
+    <h2 class="page-title">Ajustes do Aurora Home</h2>
+    <div class="glass setbox" id="set-info"></div>
+  </main>
+
+  <div id="toast"></div>
+</div>
+<script src="js/config.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
