@@ -188,8 +188,59 @@
   };
 
   /* ---------- Home Assistant ---------- */
-  var HA_ON = !!(CFG.haUrl && CFG.haToken && (CFG.haEntities || []).length);
-  var haStates = {}, ws = null, msgId = 1;
+  var HA_ON = !!((IS_TV || window.__AURORA_FORCE_HA) && CFG.haUrl && (CFG.haToken || CFG.haAuth === "trusted") && (CFG.haEntities || []).length);
+  var haStates = {}, ws = null, msgId = 1, haStatus = "", haAccess = CFG.haToken || "";
+  var HA_BASE = (CFG.haUrl || "").replace(/\/$/, ""), HA_CLIENT = HA_BASE + "/";
+  function setHaStatus(t) { haStatus = t; var el = $("casa-demo"); if (el && HA_ON) el.textContent = t; }
+  function store(k, v) { try { if (v == null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) {} }
+  function load(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+
+  function http(method, path, body, form, cb) {
+    var x = new XMLHttpRequest();
+    x.open(method, HA_BASE + path); x.timeout = 15000;
+    if (form) x.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+    else if (body) x.setRequestHeader("Content-Type", "application/json");
+    x.onload = function () { var j = null; try { j = JSON.parse(x.responseText); } catch (e) {} cb(x.status, j, x.responseText); };
+    x.onerror = function () { cb(0, null, "sem resposta (rede ou CORS)"); };
+    x.ontimeout = function () { cb(0, null, "tempo esgotado"); };
+    x.send(form ? Object.keys(body).map(function (k) { return encodeURIComponent(k) + "=" + encodeURIComponent(body[k]); }).join("&") : (body ? JSON.stringify(body) : null));
+  }
+  function tokenFrom(params, cb) {
+    params.client_id = HA_CLIENT;
+    http("POST", "/auth/token", params, true, function (st, j, raw) {
+      if (st === 200 && j && j.access_token) {
+        haAccess = j.access_token;
+        if (j.refresh_token) store("aurora_ha_refresh", j.refresh_token);
+        cb(true);
+      } else cb(false, "token " + st + " " + String(raw).slice(0, 80));
+    });
+  }
+  function haLogin(cb) {
+    if (CFG.haToken) { haAccess = CFG.haToken; cb(true); return; }
+    var rt = load("aurora_ha_refresh");
+    if (rt) {
+      tokenFrom({ grant_type: "refresh_token", refresh_token: rt }, function (ok) {
+        if (ok) cb(true); else { store("aurora_ha_refresh", null); haLogin(cb); }
+      });
+      return;
+    }
+    setHaStatus("entrando no Home Assistant…");
+    http("POST", "/auth/login_flow", { client_id: HA_CLIENT, handler: ["trusted_networks", null], redirect_uri: HA_CLIENT + "?auth_callback=1", type: "authorize" }, false, function (st, j, raw) {
+      if (st !== 200 || !j) { cb(false, "login " + st + " " + String(raw).slice(0, 80)); return; }
+      function finish(r) {
+        if (r.type === "create_entry" && r.result) tokenFrom({ grant_type: "authorization_code", code: r.result }, cb);
+        else cb(false, "login: " + (r.reason || r.type || "?") + " " + JSON.stringify(r.errors || "").slice(0, 60));
+      }
+      if (j.type !== "form") { finish(j); return; }
+      var opts = [], want = (CFG.haUser || "tv sala").toLowerCase(), uid = null;
+      (j.data_schema || []).forEach(function (f) { if (f.name === "user" && f.options) opts = f.options; });
+      opts.forEach(function (o) { var id = o[0] || o.value, nm = String(o[1] || o.label || "").toLowerCase(); if (!uid && nm.indexOf(want) !== -1) uid = id; });
+      if (!uid) { cb(false, "usuário '" + want + "' não liberado para este IP"); return; }
+      http("POST", "/auth/login_flow/" + j.flow_id, { client_id: HA_CLIENT, user: uid }, false, function (st2, j2, raw2) {
+        if (st2 !== 200 || !j2) cb(false, "login2 " + st2 + " " + String(raw2).slice(0, 80)); else finish(j2);
+      });
+    });
+  }
   var DEMO = [
     { entity: "light.sala_de_jantar", label: "Luz da sala de jantar", state: "on" },
     { entity: "light.sala_de_tv", label: "Luz da sala de TV", state: "off" },
@@ -201,7 +252,7 @@
   function haLabel(e) {
     var d = e.entity.split(".")[0], s = haStates[e.entity] || {};
     var st = s.state != null ? s.state : e.state;
-    if (d === "scene" || d === "script") return { v: "Ativar", on: false };
+    if (d === "scene" || d === "script" || d === "button") return { v: "Ativar", on: false };
     if (d === "climate") {
       var t = (s.attributes && s.attributes.temperature) || e.temp;
       return { v: st === "off" ? "Desligado" : (t ? t + "° · " : "") + "Ligado", on: st !== "off" && st != null };
@@ -214,7 +265,7 @@
   function renderHA() {
     var list = HA_ON ? CFG.haEntities : (IS_TV ? [] : DEMO);
     $("casa-title").style.display = list.length ? "" : "none";
-    $("casa-demo").textContent = HA_ON ? "" : "demonstração — conecte seu Home Assistant";
+    $("casa-demo").textContent = HA_ON ? haStatus : "demonstração — conecte seu Home Assistant";
     [$("casa-row"), $("casa-grid")].forEach(function (box) {
       box.innerHTML = "";
       list.forEach(function (e) {
@@ -235,36 +286,44 @@
   function haToggle(e) {
     var d = e.entity.split(".")[0];
     if (!HA_ON) {
-      if (d === "scene") { toast("Demo: cena ativada"); return; }
+      if (d === "scene" || d === "button") { toast("Demo: " + e.label); return; }
       e.state = e.state === "on" || (d === "climate" && e.state !== "off") ? "off" : (d === "climate" ? "cool" : "on");
       renderHA(); return;
     }
-    var svc = d === "scene" ? ["scene", "turn_on"] : d === "script" ? ["script", "turn_on"] :
+    var svc = d === "scene" ? ["scene", "turn_on"] : d === "script" ? ["script", "turn_on"] : d === "button" ? ["button", "press"] :
       d === "climate" ? ["climate", (haStates[e.entity] || {}).state === "off" ? "turn_on" : "turn_off"] : ["homeassistant", "toggle"];
     send({ type: "call_service", domain: svc[0], service: svc[1], target: { entity_id: e.entity } });
+    if (d === "button" || d === "scene" || d === "script") toast(e.label);
   }
 
   function send(o) { if (ws && ws.readyState === 1) { o.id = msgId++; ws.send(JSON.stringify(o)); } else toast("Home Assistant desconectado"); }
 
+  var haRetry = 5000;
   function haConnect() {
     if (!HA_ON) return;
-    var url = CFG.haUrl.replace(/^http/, "ws").replace(/\/$/, "") + "/api/websocket";
-    try { ws = new WebSocket(url); } catch (e) { return; }
-    ws.onmessage = function (m) {
-      var d = JSON.parse(m.data);
-      if (d.type === "auth_required") ws.send(JSON.stringify({ type: "auth", access_token: CFG.haToken }));
-      else if (d.type === "auth_ok") {
-        send({ type: "get_states" });
-        send({ type: "subscribe_events", event_type: "state_changed" });
-      } else if (d.type === "auth_invalid") toast("Token do Home Assistant inválido");
-      else if (d.type === "result" && Array.isArray(d.result)) {
-        d.result.forEach(function (s) { haStates[s.entity_id] = s; }); renderHA();
-      } else if (d.type === "event" && d.event && d.event.data && d.event.data.new_state) {
-        var ns = d.event.data.new_state;
-        if (CFG.haEntities.some(function (e) { return e.entity === ns.entity_id; })) { haStates[ns.entity_id] = ns; renderHA(); }
-      }
-    };
-    ws.onclose = function () { setTimeout(haConnect, 10000); };
+    haLogin(function (ok, err) {
+      if (!ok) { setHaStatus("erro: " + err); setTimeout(haConnect, haRetry = Math.min(haRetry * 2, 120000)); return; }
+      var url = HA_BASE.replace(/^http/, "ws") + "/api/websocket";
+      try { ws = new WebSocket(url); } catch (e) { setHaStatus("erro: websocket"); return; }
+      ws.onmessage = function (m) {
+        var d = JSON.parse(m.data);
+        if (d.type === "auth_required") ws.send(JSON.stringify({ type: "auth", access_token: haAccess }));
+        else if (d.type === "auth_ok") {
+          haRetry = 5000; ws.__ok = true; setHaStatus("");
+          send({ type: "get_states" });
+          send({ type: "subscribe_events", event_type: "state_changed" });
+        } else if (d.type === "auth_invalid") { haAccess = ""; if (CFG.haToken) setHaStatus("erro: token inválido"); ws.close(); }
+        else if (d.type === "result" && Array.isArray(d.result)) {
+          d.result.forEach(function (s) { haStates[s.entity_id] = s; }); renderHA();
+        } else if (d.type === "result" && d.success === false && d.error) {
+          toast("Home Assistant: " + d.error.message);
+        } else if (d.type === "event" && d.event && d.event.data && d.event.data.new_state) {
+          var ns = d.event.data.new_state;
+          if (CFG.haEntities.some(function (e) { return e.entity === ns.entity_id; })) { haStates[ns.entity_id] = ns; renderHA(); }
+        }
+      };
+      ws.onclose = function () { if (!(ws && ws.__ok)) setHaStatus("erro: sem conexão com " + HA_BASE); setTimeout(haConnect, haRetry); };
+    });
   }
 
   /* ---------- Páginas ---------- */
@@ -280,10 +339,10 @@
   }
   function renderSettings() {
     $("set-info").innerHTML =
-      "<b>Versão:</b> 1.0.0<br>" +
+      "<b>Versão:</b> 1.1.0<br>" +
       "<b>Apps encontrados na TV:</b> " + (IS_TV ? installed.length : "prévia no navegador") + "<br>" +
       "<b>Clima:</b> " + (CFG.city || "-") + " (Open-Meteo)<br>" +
-      "<b>Home Assistant:</b> " + (HA_ON ? (ws && ws.readyState === 1 ? "conectado" : "configurado, conectando…") : "não configurado") + "<br>" +
+      "<b>Home Assistant:</b> " + (HA_ON ? (ws && ws.readyState === 1 ? "conectado (" + HA_BASE + ")" : (haStatus || "conectando…")) : "não configurado") + "<br>" +
       "<b>Para mudar:</b> edite js/config.js e reinstale pelo TizenBrew Installer.";
   }
   var navBtns = document.querySelectorAll(".nav");

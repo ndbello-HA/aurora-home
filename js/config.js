@@ -5,17 +5,21 @@ window.AURORA_CONFIG = {
   lat: -23.55,
   lon: -46.63,
 
-  // Home Assistant (opcional). Deixe em branco para esconder a linha "Casa".
-  // haUrl: endereço local do HA, ex.: "http://192.168.15.10:8123"
-  // haToken: token de longa duração (Perfil > Segurança > Tokens de acesso de longa duração)
-  haUrl: "",
+  // Home Assistant. Login automático pelo usuário "TV Sala" via trusted_networks
+  // (liberado só para o IP da TV no configuration.yaml do HA). Nenhum token aqui:
+  // este repositório é público.
+  haUrl: "http://192.168.15.91:8123",
+  haAuth: "trusted",
+  haUser: "TV Sala",
   haToken: "",
 
-  // Cartões da linha "Casa": entity_id do Home Assistant.
+  // Cartões da linha "Casa".
   haEntities: [
-    // { entity: "light.sala", label: "Luz da sala" },
-    // { entity: "climate.ar_sala", label: "Ar da sala" },
-    // { entity: "scene.cinema", label: "Modo cinema" }
+    { entity: "light.sala_de_tv_sala_de_jantar_switch_2", label: "Luz da sala de jantar" },
+    { entity: "light.sala_de_tv_sala_de_jantar_switch_1", label: "Luz da sala de TV" },
+    { entity: "climate.ar_condicionado_sala", label: "Ar da sala" },
+    { entity: "button.nelsondebellojr_gmail_com_preparar_o_cinema", label: "Preparar cinema" },
+    { entity: "switch.tomada_abajur", label: "Abajur" }
   ],
 
   // Apps da linha "Seus aplicativos". "match" procura pelo nome do app instalado;
@@ -29,7 +33,6 @@ window.AURORA_CONFIG = {
     { name: "YouTube",      match: ["youtube"],               id: "111299001912",  c1: "#ff2a2a", c2: "#6e0a0a" },
     { name: "HBO Max",      match: ["hbo", "max"],            id: "3202301029760", c1: "#5b2bd6", c2: "#1b0b52" },
     { name: "Globoplay",    match: ["globoplay"],             id: "",              c1: "#ff5a1f", c2: "#7a1d04" },
-    { name: "Paramount+",   match: ["paramount"],             id: "3201710015067", c1: "#1f6bff", c2: "#0a2366" },
-    { name: "Spotify",      match: ["spotify"],               id: "3201606009684", c1: "#1db954", c2: "#0a3d1c" }
+    { name: "Paramount+",   match: ["paramount"],             id: "3201710015067", c1: "#1f6bff", c2: "#0a2366" }
   ]
 };
