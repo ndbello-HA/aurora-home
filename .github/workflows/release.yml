@@ -15,7 +15,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Montar AuroraHome.wgt
         run: |
-          VERSION=$(grep -o 'version="[0-9.]*"' config.xml | head -1 | cut -d'"' -f2)
+          VERSION=$(grep '<widget' config.xml | grep -o ' version="[0-9.]*"' | cut -d'"' -f2)
           echo "VERSION=$VERSION" >> "$GITHUB_ENV"
           zip -r -X AuroraHome.wgt config.xml index.html icon.png css js
           unzip -l AuroraHome.wgt
