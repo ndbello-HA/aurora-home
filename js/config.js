@@ -8,7 +8,7 @@ window.AURORA_CONFIG = {
   // Home Assistant. Login automático pelo usuário "TV Sala" via trusted_networks
   // (liberado só para o IP da TV no configuration.yaml do HA). Nenhum token aqui:
   // este repositório é público.
-  haUrl: "http://192.168.15.91:8123",
+  haUrl: "http://192.168.15.91",
   haAuth: "trusted",
   haUser: "TV Sala",
   haToken: "",
