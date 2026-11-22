@@ -199,7 +199,7 @@
     var x = new XMLHttpRequest();
     x.open(method, HA_BASE + path); x.timeout = 15000;
     if (form) x.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-    else if (body) x.setRequestHeader("Content-Type", "application/json");
+    else if (body) x.setRequestHeader("Content-Type", "text/plain;charset=UTF-8");
     x.onload = function () { var j = null; try { j = JSON.parse(x.responseText); } catch (e) {} cb(x.status, j, x.responseText); };
     x.onerror = function () { cb(0, null, "sem resposta (rede ou CORS)"); };
     x.ontimeout = function () { cb(0, null, "tempo esgotado"); };
@@ -226,7 +226,18 @@
     }
     setHaStatus("entrando no Home Assistant…");
     http("POST", "/auth/login_flow", { client_id: HA_CLIENT, handler: ["trusted_networks", null], redirect_uri: HA_CLIENT + "?auth_callback=1", type: "authorize" }, false, function (st, j, raw) {
-      if (st !== 200 || !j) { cb(false, "login " + st + " " + String(raw).slice(0, 80)); return; }
+      if (st !== 200 || !j) {
+        if (st === 0) {
+          var origin = String(location.origin || location.protocol);
+          try {
+            var t = new WebSocket(HA_BASE.replace(/^http/, "ws") + "/api/websocket"), done = false;
+            t.onopen = function () { if (done) return; done = true; t.close(); cb(false, "bloqueio CORS (rede ok) · origem: " + origin); };
+            t.onerror = function () { if (done) return; done = true; cb(false, "sem rede até " + HA_BASE + " · origem: " + origin); };
+          } catch (e) { cb(false, "login 0 · origem: " + origin); }
+          return;
+        }
+        cb(false, "login " + st + " " + String(raw).slice(0, 80)); return;
+      }
       function finish(r) {
         if (r.type === "create_entry" && r.result) tokenFrom({ grant_type: "authorization_code", code: r.result }, cb);
         else cb(false, "login: " + (r.reason || r.type || "?") + " " + JSON.stringify(r.errors || "").slice(0, 60));
@@ -253,6 +264,7 @@
     var d = e.entity.split(".")[0], s = haStates[e.entity] || {};
     var st = s.state != null ? s.state : e.state;
     if (d === "scene" || d === "script" || d === "button") return { v: "Ativar", on: false };
+    if (st == null) return { v: "…", on: false };
     if (d === "climate") {
       var t = (s.attributes && s.attributes.temperature) || e.temp;
       return { v: st === "off" ? "Desligado" : (t ? t + "° · " : "") + "Ligado", on: st !== "off" && st != null };
@@ -339,7 +351,7 @@
   }
   function renderSettings() {
     $("set-info").innerHTML =
-      "<b>Versão:</b> 1.1.0<br>" +
+      "<b>Versão:</b> 1.1.1<br>" +
       "<b>Apps encontrados na TV:</b> " + (IS_TV ? installed.length : "prévia no navegador") + "<br>" +
       "<b>Clima:</b> " + (CFG.city || "-") + " (Open-Meteo)<br>" +
       "<b>Home Assistant:</b> " + (HA_ON ? (ws && ws.readyState === 1 ? "conectado (" + HA_BASE + ")" : (haStatus || "conectando…")) : "não configurado") + "<br>" +
