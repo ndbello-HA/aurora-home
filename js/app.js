@@ -122,7 +122,7 @@
     try {
       tizen.application.getAppsInfo(function (infos) {
         var SYS_ID = /^(org|com|net|kr|samsung|tizen|tv)\./i;
-        var SYS_NAME = /test|teste|factory|f[áa]brica|diagnos|calibr|service|servi[çc]o|daemon|panel|painel|debug|demo|aurora home|device care|cuidados|self|autodiag|e-manual|manual eletr/i;
+        var SYS_NAME = /test|teste|factory|f[áa]brica|diagnos|calibr|service|servi[çc]o|daemon|panel|painel|debug|demo|aurora home|device care|cuidados|self|autodiag|e-manual|manual eletr|workspace/i;
         installed = infos.filter(function (a) {
           return a.show !== false && a.name && a.iconPath && !SYS_ID.test(a.id) && !SYS_NAME.test(a.name) && a.id.indexOf("AurHome001") !== 0;
         })
@@ -355,7 +355,7 @@
   }
   function renderSettings() {
     $("set-info").innerHTML =
-      "<b>Versão:</b> 1.1.5<br>" +
+      "<b>Versão:</b> 1.1.6<br>" +
       "<b>Apps encontrados na TV:</b> " + (IS_TV ? installed.length : "prévia no navegador") + "<br>" +
       "<b>Clima:</b> " + (CFG.city || "-") + " (Open-Meteo)<br>" +
       "<b>Home Assistant:</b> " + (HA_ON ? (ws && ws.readyState === 1 ? "conectado (" + HA_BASE + ")" : (haStatus || "conectando…")) : "não configurado") + "<br>" +
