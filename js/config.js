@@ -29,6 +29,10 @@ window.AURORA_CONFIG = {
     { name: "Claro TV+", match: ["claro tv", "claro"], id: "" }
   ],
 
+  // Jogos que devem aparecer na tela Jogos mesmo que a TV não os marque como jogo
+  // (parte do nome, em minúsculas). Ex.: ["asphalt", "sonic"]
+  games: [],
+
   // Apps da linha "Seus aplicativos". "match" procura pelo nome do app instalado;
   // "id" é o ID Tizen usado se a busca por nome falhar.
   apps: [

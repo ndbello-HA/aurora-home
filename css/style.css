@@ -101,6 +101,7 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 .app.focus { transform: scale(1.1); box-shadow: none; }
 .demo-tag { font-size: 20px; opacity: .6; font-weight: 400; margin-left: 10px; }
 
+#games-grid { position: absolute; top: 290px; left: 10px; right: 60px; display: flex; flex-wrap: wrap; gap: 34px 30px; }
 #all-apps { position: absolute; top: 290px; left: 10px; right: 60px; display: flex; flex-wrap: wrap; gap: 34px 30px; }
 #casa-grid { position: absolute; top: 290px; left: 10px; right: 60px; display: flex; flex-wrap: wrap; gap: 30px; }
 .setbox { position: absolute; top: 290px; left: 10px; width: 1100px; padding: 40px 48px; font-size: 28px; line-height: 1.6; }

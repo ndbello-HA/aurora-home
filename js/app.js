@@ -107,6 +107,30 @@
     });
   }
 
+  var GAME_SYS = /game ?hub|gamepad|game ?bar|gaming ?hub/i;
+  function renderGames() {
+    var box = $("games-grid"); box.innerHTML = "";
+    var extra = (CFG.games || []).map(function (g) { return String(g).toLowerCase(); });
+    var visibleIds = {};
+    installed.forEach(function (a) { visibleIds[a.id] = true; });
+    var list = IS_TV ? allApps.filter(function (a) {
+      if (!visibleIds[a.id] || GAME_SYS.test(a.name + " " + a.id)) return false;
+      var n = a.name.toLowerCase();
+      return /game/i.test(a.cats) || extra.some(function (g) { return n.indexOf(g) !== -1; });
+    }) : [{ name: "Jogo exemplo", id: "", c1: "#7b5ed6", c2: "#1c1150" }];
+    if (!list.length) {
+      box.innerHTML = '<div class="glass setbox" style="position:static">Nenhum jogo instalado ainda.<br>Instale jogos pela loja da Samsung e eles aparecem aqui. Se algum não aparecer, me diga o nome.</div>';
+      return;
+    }
+    list.forEach(function (app) {
+      var b = document.createElement("button");
+      b.className = "app f";
+      b.innerHTML = tileHTML({ name: app.name, c1: app.c1 || "#7b5ed6", c2: app.c2 || "#1c1150" }, app);
+      b.onclick = function () { launch(app); };
+      box.appendChild(b);
+    });
+  }
+
   function renderAllApps() {
     var box = $("all-apps"); box.innerHTML = "";
     var list = installed.length ? installed : (CFG.apps || []).map(function (e) { return { name: e.name, id: e.id, c1: e.c1, c2: e.c2 }; });
@@ -126,7 +150,7 @@
         var SYS_ID = /^(org|com|net|kr|samsung|tizen|tv)\./i;
         var SYS_NAME = /test|teste|factory|f[áa]brica|diagnos|calibr|service|servi[çc]o|daemon|panel|painel|debug|demo|aurora home|device care|cuidados|self|autodiag|e-manual|manual eletr|workspace/i;
         allApps = infos.filter(function (a) { return a.name; })
-          .map(function (a) { return { id: a.id, name: String(a.name).replace(/[\s\u00a0\u200b-\u200f\u2028\u2029\ufeff]+/g, " ").trim(), icon: a.iconPath || "", visible: a.show !== false && !!a.iconPath }; })
+          .map(function (a) { return { id: a.id, name: String(a.name).replace(/[\s\u00a0\u200b-\u200f\u2028\u2029\ufeff]+/g, " ").trim(), icon: a.iconPath || "", visible: a.show !== false && !!a.iconPath, cats: (a.categories || []).join(" ") }; })
           .sort(function (x, y) { return (y.visible ? 1 : 0) - (x.visible ? 1 : 0); });
         installed = infos.filter(function (a) {
           var nm = String(a.name).replace(/[\s\u00a0\u200b-\u200f\u2028\u2029\ufeff]+/g, " ").trim();
@@ -354,7 +378,7 @@
   var page = "home";
   function go(p) {
     page = p;
-    ["home", "apps", "casa", "settings"].forEach(function (id) { $(id).className = "page" + (id === p ? " show" : ""); });
+    ["home", "apps", "jogos", "casa", "settings"].forEach(function (id) { $(id).className = "page" + (id === p ? " show" : ""); });
     var navs = document.querySelectorAll(".nav");
     for (var i = 0; i < navs.length; i++) navs[i].classList.toggle("active", navs[i].getAttribute("data-page") === p);
     if (p === "settings") renderSettings();
@@ -363,7 +387,7 @@
   }
   function renderSettings() {
     $("set-info").innerHTML =
-      "<b>Versão:</b> 1.1.9<br>" +
+      "<b>Versão:</b> 1.2.0<br>" +
       "<b>Apps encontrados na TV:</b> " + (IS_TV ? installed.length : "prévia no navegador") + "<br>" +
       "<b>Clima:</b> " + (CFG.city || "-") + " (Open-Meteo)<br>" +
       "<b>Home Assistant:</b> " + (HA_ON ? (ws && ws.readyState === 1 ? "conectado (" + HA_BASE + ")" : (haStatus || "conectando…")) : "não configurado") + "<br>" +
@@ -441,7 +465,7 @@
 
   /* ---------- Início ---------- */
   loadApps(function () {
-    renderAppsRow(); renderAllApps(); renderHA(); haConnect();
+    renderAppsRow(); renderAllApps(); renderGames(); renderHA(); haConnect();
     setFocus($("apps-row").querySelector(".f") || navBtns[0]);
   });
 })();
