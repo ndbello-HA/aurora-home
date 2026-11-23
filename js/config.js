@@ -13,6 +13,16 @@ window.AURORA_CONFIG = {
   haUser: "TV Sala",
   haToken: "",
 
+  // TV no Home Assistant (SmartThings) e entradas da tela "Entradas".
+  haTvEntity: "media_player.samsung_tv",
+  sources: [
+    { label: "TV", source: "tv" },
+    { label: "HDMI 1", source: "hdmi_1" },
+    { label: "HDMI 2", source: "hdmi_2" },
+    { label: "HDMI 3", source: "hdmi_3" },
+    { label: "HDMI 4", source: "hdmi_4" }
+  ],
+
   // Cartões da linha "Casa".
   haEntities: [
     { entity: "light.sala_de_tv_sala_de_jantar_switch_2", label: "Luz da sala de jantar" },

@@ -212,16 +212,25 @@
   }
   weather(); setInterval(weather, 15 * 60 * 1000);
 
-  /* ---------- Entradas (experimental) ---------- */
-  var SOURCE_APPS = ["org.tizen.tv-source-menu", "com.samsung.tv.source-menu", "org.tizen.source-menu"];
-  $("inputs").onclick = function () {
-    if (!IS_TV) { toast("Prévia: abriria o menu de fontes"); return; }
-    var i = 0;
-    (function next() {
-      if (i >= SOURCE_APPS.length) { toast("Use o botão Fonte do controle"); return; }
-      try { tizen.application.launch(SOURCE_APPS[i++], function () {}, next); } catch (e) { next(); }
-    })();
-  };
+  /* ---------- Entradas (via Home Assistant / SmartThings) ---------- */
+  $("inputs").onclick = function () { go("entradas"); };
+  function renderSources() {
+    var box = $("sources-grid"); if (!box) return;
+    var cur = ((haStates[CFG.haTvEntity] || {}).attributes || {}).source;
+    box.innerHTML = "";
+    (CFG.sources || []).forEach(function (src) {
+      var b = document.createElement("button");
+      b.className = "ha glass f" + (cur === src.source ? " on" : "");
+      b.innerHTML = '<div class="k">' + (cur === src.source ? "Atual" : "Entrada") + '</div><div class="v">' + src.label + "</div>";
+      b.onclick = function () {
+        if (!IS_TV) { toast("Prévia: trocaria para " + src.label); return; }
+        if (!(ws && ws.readyState === 1)) { toast("Home Assistant desconectado"); return; }
+        toast("Trocando para " + src.label + "…");
+        send({ type: "call_service", domain: "media_player", service: "select_source", target: { entity_id: CFG.haTvEntity }, service_data: { source: src.source } });
+      };
+      box.appendChild(b);
+    });
+  }
 
   /* ---------- Home Assistant ---------- */
   var HA_ON = !!((IS_TV || window.__AURORA_FORCE_HA) && CFG.haUrl && (CFG.haToken || CFG.haAuth === "trusted") && (CFG.haEntities || []).length);
@@ -367,6 +376,7 @@
           toast("Home Assistant: " + d.error.message);
         } else if (d.type === "event" && d.event && d.event.data && d.event.data.new_state) {
           var ns = d.event.data.new_state;
+          if (ns.entity_id === CFG.haTvEntity) { haStates[ns.entity_id] = ns; if (page === "entradas") renderSources(); }
           if (CFG.haEntities.some(function (e) { return e.entity === ns.entity_id; })) { haStates[ns.entity_id] = ns; renderHA(); }
         }
       };
@@ -378,16 +388,17 @@
   var page = "home";
   function go(p) {
     page = p;
-    ["home", "apps", "jogos", "casa", "settings"].forEach(function (id) { $(id).className = "page" + (id === p ? " show" : ""); });
+    ["home", "apps", "jogos", "entradas", "casa", "settings"].forEach(function (id) { $(id).className = "page" + (id === p ? " show" : ""); });
     var navs = document.querySelectorAll(".nav");
     for (var i = 0; i < navs.length; i++) navs[i].classList.toggle("active", navs[i].getAttribute("data-page") === p);
     if (p === "settings") renderSettings();
+    if (p === "entradas") renderSources();
     var first = $(p).querySelector(".f");
     setFocus(first || document.querySelector('.nav[data-page="' + p + '"]'));
   }
   function renderSettings() {
     $("set-info").innerHTML =
-      "<b>Versão:</b> 1.2.0<br>" +
+      "<b>Versão:</b> 1.3.0<br>" +
       "<b>Apps encontrados na TV:</b> " + (IS_TV ? installed.length : "prévia no navegador") + "<br>" +
       "<b>Clima:</b> " + (CFG.city || "-") + " (Open-Meteo)<br>" +
       "<b>Home Assistant:</b> " + (HA_ON ? (ws && ws.readyState === 1 ? "conectado (" + HA_BASE + ")" : (haStatus || "conectando…")) : "não configurado") + "<br>" +
