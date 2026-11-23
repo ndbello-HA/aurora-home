@@ -66,7 +66,7 @@
     return null;
   }
   function cfgApp(name) {
-    var a = CFG.apps || [];
+    var a = (CFG.apps || []).concat(CFG.menuApps || []);
     for (var i = 0; i < a.length; i++) if (a[i].name === name) return a[i];
     return { name: name, match: [name.toLowerCase()] };
   }
@@ -351,7 +351,7 @@
   }
   function renderSettings() {
     $("set-info").innerHTML =
-      "<b>Versão:</b> 1.1.2<br>" +
+      "<b>Versão:</b> 1.1.3<br>" +
       "<b>Apps encontrados na TV:</b> " + (IS_TV ? installed.length : "prévia no navegador") + "<br>" +
       "<b>Clima:</b> " + (CFG.city || "-") + " (Open-Meteo)<br>" +
       "<b>Home Assistant:</b> " + (HA_ON ? (ws && ws.readyState === 1 ? "conectado (" + HA_BASE + ")" : (haStatus || "conectando…")) : "não configurado") + "<br>" +

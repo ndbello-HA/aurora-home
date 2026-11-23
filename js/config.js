@@ -22,6 +22,12 @@ window.AURORA_CONFIG = {
     { entity: "switch.tomada_abajur", label: "Abajur" }
   ],
 
+  // Apps usados pelos botões do menu lateral (não aparecem na linha de apps).
+  menuApps: [
+    { name: "Spotify", match: ["spotify"], id: "3201606009684" },
+    { name: "Claro TV+", match: ["claro tv", "claro"], id: "" }
+  ],
+
   // Apps da linha "Seus aplicativos". "match" procura pelo nome do app instalado;
   // "id" é o ID Tizen usado se a busca por nome falhar.
   apps: [
