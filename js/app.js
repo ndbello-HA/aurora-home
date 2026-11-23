@@ -217,8 +217,8 @@
     if (!IS_TV) { toast("Prévia: abriria o menu de entradas da Samsung"); return; }
     if (!(ws && ws.readyState === 1)) { toast("Home Assistant desconectado"); return; }
     toast("Abrindo entradas…");
-    send({ type: "call_service", domain: "button", service: "press", target: { entity_id: CFG.haSourceButton || "button.samsung_tv_source" } });
-    setTimeout(function () { try { tizen.application.getCurrentApplication().hide(); } catch (e) {} }, 300);
+    send({ type: "call_service", domain: "script", service: "turn_on", target: { entity_id: CFG.haSourceScript || "script.aurora_abrir_entradas" } });
+    setTimeout(function () { try { tizen.application.getCurrentApplication().hide(); } catch (e) {} }, 200);
   };
   function renderSources() {
     var box = $("sources-grid"); if (!box) return;
@@ -407,7 +407,7 @@
   }
   function renderSettings() {
     $("set-info").innerHTML =
-      "<b>Versão:</b> 1.3.3<br>" +
+      "<b>Versão:</b> 1.3.4<br>" +
       "<b>Apps encontrados na TV:</b> " + (IS_TV ? installed.length : "prévia no navegador") + "<br>" +
       "<b>Clima:</b> " + (CFG.city || "-") + " (Open-Meteo)<br>" +
       "<b>Home Assistant:</b> " + (HA_ON ? (ws && ws.readyState === 1 ? "conectado (" + HA_BASE + ")" : (haStatus || "conectando…")) : "não configurado") + "<br>" +

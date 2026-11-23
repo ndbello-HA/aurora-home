@@ -17,6 +17,8 @@ window.AURORA_CONFIG = {
   haTvEntity: "media_player.samsung_tv",
   // Botão "Fonte" do controle no Home Assistant: o cartão Entradas abre o menu nativo da Samsung.
   haSourceButton: "button.samsung_tv_source",
+  // Script do HA que espera 2 s (o launcher se esconder) e aperta o botão Fonte.
+  haSourceScript: "script.aurora_abrir_entradas",
   sources: [
     { label: "TV", source: "tv" },
     { label: "HDMI 1", source: "hdmi_1" },
