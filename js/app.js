@@ -165,24 +165,37 @@
     } catch (e) { done(); }
   }
 
-  /* ---------- Destaque (carrossel) ---------- */
-  var SLIDES = [
-    { k: "TV ao vivo", t: "Descubra novos mundos", s: "Canais ao vivo, filmes e séries no Claro TV+.", cta: "Assistir agora", app: "Claro TV+" },
-    { k: "Sessão de hoje", t: "Escolha o filme da noite", s: "Seus serviços favoritos a um clique do controle.", cta: "Abrir Netflix", app: "Netflix" },
-    { k: "Novidades", t: "O que está bombando", s: "Vídeos, clipes e transmissões no YouTube.", cta: "Abrir YouTube", app: "YouTube" },
-    { k: "Novelas e esportes", t: "Tudo da Globo", s: "Ao vivo e sob demanda no Globoplay.", cta: "Abrir Globoplay", app: "Globoplay" }
-  ];
-  var slide = 0;
-  function showSlide(i) {
-    slide = (i + SLIDES.length) % SLIDES.length;
-    var s = SLIDES[slide];
-    $("hero-kicker").textContent = s.k; $("hero-title").textContent = s.t;
-    $("hero-sub").textContent = s.s; $("hero-cta").textContent = s.cta;
-    $("dots").innerHTML = SLIDES.map(function (_, j) { return "<i" + (j === slide ? ' class="on"' : "") + "></i>"; }).join("");
+  /* ---------- Destaque: modo cinema ---------- */
+  function renderCinema() {
+    var hs = haStates || {};
+    var lights = CFG.cinemaLights || [], anyOn = false, known = false, parts = [];
+    lights.forEach(function (l) {
+      var st = (hs[l.entity] || {}).state;
+      if (st === "on" || st === "off") known = true;
+      if (st === "on") anyOn = true;
+      parts.push('<span class="' + (st === "on" ? "on" : "") + '">💡 ' + l.label + ": " + (st === "on" ? "acesa" : st === "off" ? "apagada" : "…") + "</span>");
+    });
+    var ac = hs[CFG.cinemaClimate];
+    if (ac) {
+      var at = ac.attributes || {};
+      parts.push("<span>❄ Ar: " + (ac.state === "off" ? "desligado" : (at.temperature ? at.temperature + "°" : "ligado")) +
+        (at.current_temperature != null ? " · sala " + Math.round(at.current_temperature) + "°" : "") + "</span>");
+    }
+    $("cine-status").innerHTML = HA_ON ? parts.join("") : (IS_TV ? "" : "<span>Prévia — conecte o Home Assistant</span>");
+    var dark = known && !anyOn;
+    $("hero-title").textContent = dark ? "Cinema pronto" : "Hora do filme?";
+    $("hero-sub").textContent = dark ? "Luzes da sala apagadas. Bom filme!" : "Apague as luzes da sala com um clique.";
+    $("hero").className = "glass" + (dark ? " dark" : "");
   }
-  $("hero-btn").onclick = function () { var s = SLIDES[slide]; launch(findApp(cfgApp(s.app)), s.app); };
-  showSlide(0);
-  setInterval(function () { if (current !== $("hero-btn")) showSlide(slide + 1); }, 9000);
+  function cinema(on) {
+    var ent = on ? CFG.cinemaOn : CFG.cinemaOff;
+    if (!HA_ON) { toast(on ? "Prévia: apagaria as luzes da sala" : "Prévia: acenderia as luzes da sala"); return; }
+    toast(on ? "Modo cinema" : "Acendendo luzes");
+    send({ type: "call_service", domain: "script", service: "turn_on", target: { entity_id: ent } });
+  }
+  $("cine-on").onclick = function () { cinema(true); };
+  $("cine-off").onclick = function () { cinema(false); };
+  renderCinema();
 
   /* ---------- Clima (Open-Meteo) ---------- */
   var WMO = {
@@ -380,13 +393,14 @@
           send({ type: "subscribe_events", event_type: "state_changed" });
         } else if (d.type === "auth_invalid") { haAccess = ""; if (CFG.haToken) setHaStatus("erro: token inválido"); ws.close(); }
         else if (d.type === "result" && Array.isArray(d.result)) {
-          d.result.forEach(function (s) { haStates[s.entity_id] = s; }); renderHA();
+          d.result.forEach(function (s) { haStates[s.entity_id] = s; }); renderHA(); renderCinema();
         } else if (d.type === "result" && d.success === false && d.error) {
           toast("Home Assistant: " + d.error.message);
         } else if (d.type === "event" && d.event && d.event.data && d.event.data.new_state) {
           var ns = d.event.data.new_state;
           if (ns.entity_id === CFG.haTvEntity) { haStates[ns.entity_id] = ns; if (page === "entradas") renderSources(); }
           if (CFG.haEntities.some(function (e) { return e.entity === ns.entity_id; })) { haStates[ns.entity_id] = ns; renderHA(); }
+          if (ns.entity_id === CFG.cinemaClimate || (CFG.cinemaLights || []).some(function (l) { return l.entity === ns.entity_id; })) { haStates[ns.entity_id] = ns; renderCinema(); }
         }
       };
       ws.onclose = function () { if (!(ws && ws.__ok)) setHaStatus("erro: sem conexão com " + HA_BASE); setTimeout(haConnect, haRetry); };
@@ -407,7 +421,7 @@
   }
   function renderSettings() {
     $("set-info").innerHTML =
-      "<b>Versão:</b> 1.3.4<br>" +
+      "<b>Versão:</b> 1.3.5<br>" +
       "<b>Apps encontrados na TV:</b> " + (IS_TV ? installed.length : "prévia no navegador") + "<br>" +
       "<b>Clima:</b> " + (CFG.city || "-") + " (Open-Meteo)<br>" +
       "<b>Home Assistant:</b> " + (HA_ON ? (ws && ws.readyState === 1 ? "conectado (" + HA_BASE + ")" : (haStatus || "conectando…")) : "não configurado") + "<br>" +

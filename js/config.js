@@ -19,6 +19,14 @@ window.AURORA_CONFIG = {
   haSourceButton: "button.samsung_tv_source",
   // Script do HA que espera 2 s (o launcher se esconder) e aperta o botão Fonte.
   haSourceScript: "script.aurora_abrir_entradas",
+  // Modo cinema (quadro grande da tela inicial): scripts criados no Home Assistant.
+  cinemaOn: "script.aurora_modo_cinema",
+  cinemaOff: "script.aurora_sair_cinema",
+  cinemaLights: [
+    { entity: "light.sala_de_tv_sala_de_jantar_switch_1", label: "Sala de TV" },
+    { entity: "light.sala_de_tv_sala_de_jantar_switch_2", label: "Sala de jantar" }
+  ],
+  cinemaClimate: "climate.ar_condicionado_sala",
   sources: [
     { label: "TV", source: "tv" },
     { label: "HDMI 1", source: "hdmi_1" },
