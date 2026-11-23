@@ -213,7 +213,12 @@
   weather(); setInterval(weather, 15 * 60 * 1000);
 
   /* ---------- Entradas (via Home Assistant / SmartThings) ---------- */
-  $("inputs").onclick = function () { go("entradas"); };
+  $("inputs").onclick = function () {
+    if (!IS_TV) { toast("Prévia: abriria o menu de entradas da Samsung"); return; }
+    if (!(ws && ws.readyState === 1)) { toast("Home Assistant desconectado"); return; }
+    toast("Abrindo entradas…");
+    send({ type: "call_service", domain: "button", service: "press", target: { entity_id: CFG.haSourceButton || "button.samsung_tv_source" } });
+  };
   function renderSources() {
     var box = $("sources-grid"); if (!box) return;
     var cur = ((haStates[CFG.haTvEntity] || {}).attributes || {}).source;
@@ -401,7 +406,7 @@
   }
   function renderSettings() {
     $("set-info").innerHTML =
-      "<b>Versão:</b> 1.3.1<br>" +
+      "<b>Versão:</b> 1.3.2<br>" +
       "<b>Apps encontrados na TV:</b> " + (IS_TV ? installed.length : "prévia no navegador") + "<br>" +
       "<b>Clima:</b> " + (CFG.city || "-") + " (Open-Meteo)<br>" +
       "<b>Home Assistant:</b> " + (HA_ON ? (ws && ws.readyState === 1 ? "conectado (" + HA_BASE + ")" : (haStatus || "conectando…")) : "não configurado") + "<br>" +
