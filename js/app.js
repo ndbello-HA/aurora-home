@@ -54,13 +54,14 @@
   window.addEventListener("online", netState); window.addEventListener("offline", netState); netState();
 
   /* ---------- Apps instalados ---------- */
-  var installed = []; // {id, name, icon}
+  var installed = []; // apps visíveis na tela Apps
+  var allApps = [];   // todos os apps da TV, usados para abrir pelos botões
   function findApp(entry) {
     if (!entry) return null;
     var keys = entry.match || [entry.name.toLowerCase()];
-    for (var i = 0; i < installed.length; i++) {
-      var n = (installed[i].name || "").toLowerCase();
-      for (var k = 0; k < keys.length; k++) if (n.indexOf(keys[k]) !== -1) return installed[i];
+    for (var i = 0; i < allApps.length; i++) {
+      var n = (allApps[i].name || "").toLowerCase();
+      for (var k = 0; k < keys.length; k++) if (n.indexOf(keys[k]) !== -1) return allApps[i];
     }
     if (entry.id) return { id: entry.id, name: entry.name, icon: "" };
     return null;
@@ -123,6 +124,8 @@
       tizen.application.getAppsInfo(function (infos) {
         var SYS_ID = /^(org|com|net|kr|samsung|tizen|tv)\./i;
         var SYS_NAME = /test|teste|factory|f[áa]brica|diagnos|calibr|service|servi[çc]o|daemon|panel|painel|debug|demo|aurora home|device care|cuidados|self|autodiag|e-manual|manual eletr|workspace/i;
+        allApps = infos.filter(function (a) { return a.name; })
+          .map(function (a) { return { id: a.id, name: String(a.name).replace(/[\s\u00a0\u200b-\u200f\u2028\u2029\ufeff]+/g, " ").trim(), icon: a.iconPath || "" }; });
         installed = infos.filter(function (a) {
           var nm = String(a.name).replace(/[\s\u00a0\u200b-\u200f\u2028\u2029\ufeff]+/g, " ").trim();
           var id = String(a.id || "") + " " + String(a.packageId || "");
@@ -358,7 +361,7 @@
   }
   function renderSettings() {
     $("set-info").innerHTML =
-      "<b>Versão:</b> 1.1.7<br>" +
+      "<b>Versão:</b> 1.1.8<br>" +
       "<b>Apps encontrados na TV:</b> " + (IS_TV ? installed.length : "prévia no navegador") + "<br>" +
       "<b>Clima:</b> " + (CFG.city || "-") + " (Open-Meteo)<br>" +
       "<b>Home Assistant:</b> " + (HA_ON ? (ws && ws.readyState === 1 ? "conectado (" + HA_BASE + ")" : (haStatus || "conectando…")) : "não configurado") + "<br>" +

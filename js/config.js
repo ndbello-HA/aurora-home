@@ -25,6 +25,7 @@ window.AURORA_CONFIG = {
   // Apps usados pelos botões do menu lateral (não aparecem na linha de apps).
   menuApps: [
     { name: "Spotify", match: ["spotify"], id: "3201606009684" },
+    { name: "Gaming Hub", match: ["gaming hub", "game hub", "jogos", "gaming"], id: "" },
     { name: "Claro TV+", match: ["claro tv", "claro"], id: "" }
   ],
 
