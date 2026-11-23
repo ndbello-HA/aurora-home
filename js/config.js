@@ -23,7 +23,7 @@ window.AURORA_CONFIG = {
   cinemaOn: "script.aurora_modo_cinema",
   cinemaOff: "script.aurora_sair_cinema",
   cinemaLights: [
-    { entity: "light.sala_de_tv_sala_de_jantar_switch_1", label: "Sala de TV" },
+    { entity: "light.ekaza_mini_modulo_embutido_zigbee_2ch_3_switch_1", label: "Sala de TV" },
     { entity: "light.sala_de_tv_sala_de_jantar_switch_2", label: "Sala de jantar" }
   ],
   cinemaClimate: "climate.ar_condicionado_sala",
@@ -38,7 +38,7 @@ window.AURORA_CONFIG = {
   // Cartões da linha "Casa".
   haEntities: [
     { entity: "light.sala_de_tv_sala_de_jantar_switch_2", label: "Luz da sala de jantar" },
-    { entity: "light.sala_de_tv_sala_de_jantar_switch_1", label: "Luz da sala de TV" },
+    { entity: "light.ekaza_mini_modulo_embutido_zigbee_2ch_3_switch_1", label: "Luz da sala de TV" },
     { entity: "climate.ar_condicionado_sala", label: "Ar da sala" },
     { entity: "button.nelsondebellojr_gmail_com_preparar_o_cinema", label: "Preparar cinema" },
     { entity: "switch.tomada_abajur", label: "Abajur" }
