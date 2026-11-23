@@ -73,6 +73,7 @@
   }
   function launch(app, label) {
     label = label || (app && app.name) || "app";
+    if (app && IS_TV) toast("Abrindo " + (app.name || label) + "…");
     if (!app) { toast(label + " não está instalado"); return; }
     if (!IS_TV) { toast("Prévia: abriria " + label); return; }
     try {
@@ -125,7 +126,8 @@
         var SYS_ID = /^(org|com|net|kr|samsung|tizen|tv)\./i;
         var SYS_NAME = /test|teste|factory|f[áa]brica|diagnos|calibr|service|servi[çc]o|daemon|panel|painel|debug|demo|aurora home|device care|cuidados|self|autodiag|e-manual|manual eletr|workspace/i;
         allApps = infos.filter(function (a) { return a.name; })
-          .map(function (a) { return { id: a.id, name: String(a.name).replace(/[\s\u00a0\u200b-\u200f\u2028\u2029\ufeff]+/g, " ").trim(), icon: a.iconPath || "" }; });
+          .map(function (a) { return { id: a.id, name: String(a.name).replace(/[\s\u00a0\u200b-\u200f\u2028\u2029\ufeff]+/g, " ").trim(), icon: a.iconPath || "", visible: a.show !== false && !!a.iconPath }; })
+          .sort(function (x, y) { return (y.visible ? 1 : 0) - (x.visible ? 1 : 0); });
         installed = infos.filter(function (a) {
           var nm = String(a.name).replace(/[\s\u00a0\u200b-\u200f\u2028\u2029\ufeff]+/g, " ").trim();
           var id = String(a.id || "") + " " + String(a.packageId || "");
@@ -361,10 +363,12 @@
   }
   function renderSettings() {
     $("set-info").innerHTML =
-      "<b>Versão:</b> 1.1.8<br>" +
+      "<b>Versão:</b> 1.1.9<br>" +
       "<b>Apps encontrados na TV:</b> " + (IS_TV ? installed.length : "prévia no navegador") + "<br>" +
       "<b>Clima:</b> " + (CFG.city || "-") + " (Open-Meteo)<br>" +
       "<b>Home Assistant:</b> " + (HA_ON ? (ws && ws.readyState === 1 ? "conectado (" + HA_BASE + ")" : (haStatus || "conectando…")) : "não configurado") + "<br>" +
+      "<b>Apps de jogos na TV:</b> " + (allApps.filter(function (a) { return /gam|jogo|game/i.test(a.name + " " + a.id); })
+        .map(function (a) { return a.name + " <small>(" + a.id + (a.visible ? "" : ", oculto") + ")</small>"; }).join(" · ") || "nenhum") + "<br>" +
       "<b>Para mudar:</b> edite js/config.js e reinstale pelo TizenBrew Installer.";
   }
   var navBtns = document.querySelectorAll(".nav");
