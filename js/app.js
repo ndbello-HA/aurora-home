@@ -227,6 +227,9 @@
         if (!(ws && ws.readyState === 1)) { toast("Home Assistant desconectado"); return; }
         toast("Trocando para " + src.label + "…");
         send({ type: "call_service", domain: "media_player", service: "select_source", target: { entity_id: CFG.haTvEntity }, service_data: { source: src.source } });
+        setTimeout(function () {
+          try { tizen.application.getCurrentApplication().hide(); } catch (e) { toast("Aperte Voltar para ver a entrada"); }
+        }, 1500);
       };
       box.appendChild(b);
     });
@@ -398,7 +401,7 @@
   }
   function renderSettings() {
     $("set-info").innerHTML =
-      "<b>Versão:</b> 1.3.0<br>" +
+      "<b>Versão:</b> 1.3.1<br>" +
       "<b>Apps encontrados na TV:</b> " + (IS_TV ? installed.length : "prévia no navegador") + "<br>" +
       "<b>Clima:</b> " + (CFG.city || "-") + " (Open-Meteo)<br>" +
       "<b>Home Assistant:</b> " + (HA_ON ? (ws && ws.readyState === 1 ? "conectado (" + HA_BASE + ")" : (haStatus || "conectando…")) : "não configurado") + "<br>" +
